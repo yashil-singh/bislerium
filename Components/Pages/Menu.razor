@@ -1,0 +1,47 @@
+﻿@page "/menu"
+
+<div class="container p-4">
+    <h1>Menu</h1>
+    <div>
+        <nav class="d-flex justify-content-end bg-light rounded p-2">
+            <button class="btn btn-success" type="button" @* @onclick="OpenAddUserDialog" *@>
+                <span class="bi bi-plus" /> Add
+            </button>
+        </nav>
+        <ul class="nav nav-tabs">
+            <li class="nav-item ">
+                <a class='nav-link btn'>All</a>
+            </li>
+            <li class="nav-item">
+                <a class='nav-link btn'>Coffee</a>
+            </li>
+            <li class="nav-item">
+                <a class='nav-link btn'>Add-Ins</a>
+            </li>
+        </ul>
+
+
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private GlobalState session { get; set; }
+    private bool showEditItemDialog { get; set; }
+    private bool showDeleteItemDialog { get; set; }
+    private List<MenuItems> menuItems { get; set; }
+    private MenuItems deleteItem { get; set; }
+    private string modalTitle { get; set; }
+    private string modalOkLabel { get; set; }
+    private string editMenuItemErrorMessage { get; set; }
+    private string _deleteMenuItemErrorMessage { get; set; }
+    private MenuItems menuItem { get; set; }
+    private string _tabFilter = "All";
+    private string _sortBy = "coffee";
+    private string _sortDirection = "ascending";
+
+    protected override void OnInitialized()
+    {
+        
+    }
+}

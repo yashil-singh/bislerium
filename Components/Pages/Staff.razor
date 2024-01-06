@@ -1,0 +1,215 @@
+﻿@using System.Diagnostics
+@page "/add-staff"
+@inject NavigationManager NavManager
+
+
+<div class="container p-4">
+    <h1>Staff</h1>
+    <div class="d-flex justify-content-end bg-light rounded p-2">
+        <button class="btn btn-success" type="button" @onclick="OpenAddUserDialog">
+            <span class="bi bi-plus"/> Add
+        </button>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Created At</th>
+                <th>CreatedBy</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td>@user.Username</td>
+                    <td>@user.Role.ToString()</td>
+                    <td>@user.CreatedAt.ToString("MMM dd, yyyy h:mm tt")</td>
+                    <td>
+                        @{
+                            var creator = UserServices.GetById(user.CreatedBy);
+                            <span>@(creator == null ? "N/A" : creator.Username)</span>
+                        }
+                    </td>
+                    <td>
+                        <button disabled="@(session?.CurrentUser != null ? session.CurrentUser.ID == user.ID : false)"
+                                class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteUserDialog(user)">
+                            <i class="bi bi-trash2-fill"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (showAddUserDialog)
+{
+    <Modal Title="Add User" OnClose="@OnAddUserDialogClose" OkLabel="Add">
+        <form>
+            <div class="mt-3">
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <AlertMessage Type="danger" Message="@errorMessage" />
+                }
+                else if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <AlertMessage Type="success" Message="@successMessage" />
+                }
+            </div>
+            <div class="form-floating mt-3 mb-3">
+                <input type="text" class="form-control" name="username" placeholder="Username" @bind="username">
+                <label for="username">Username</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" name="username" placeholder="Password" @bind="password">
+                <label for="username">Password</label>
+            </div>
+            <div class="mb-3">
+                <label for="role" class="form-label">Role</label>
+                <select id="role" class="form-select" @bind="role">
+                    <option selected value="0">Select</option>
+                    @foreach (var role in Enum.GetValues(typeof(Roles)).Cast<Roles>())
+                    {
+                        <option value="@role">@role.ToString()</option>
+                    }
+                </select>
+            </div>
+        </form>
+    </Modal>
+}
+
+@if (showDeleteUserDialog)
+{
+    <Modal Title="Delete User" OnClose="@OnDeleteUserDialogClose" OkLabel="Confirm">
+    <p>Are you sure you want to delete <strong>@deleteUser?.Username</strong> user and their data?</p>
+    @if (!string.IsNullOrEmpty(deleteUserErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@deleteUserErrorMessage" />
+        }
+    </Modal>
+}
+
+@code {
+    [CascadingParameter]
+    private GlobalState session { get; set; }
+    private List<Users> users { get; set; }
+    private string username { get; set; }
+    private string password { get; set; }
+    private Roles role { get; set; }
+    private string errorMessage { get; set; } = "";
+    private string successMessage { get; set; } = "";
+    private Users ?deleteUser { get; set; }
+
+    //Modals
+    private bool showDeleteUserDialog { get; set; }
+    private bool showAddUserDialog { get; set; }
+
+    //Error Messages
+    private string addUserErrorMessage { get; set; }
+    private string deleteUserErrorMessage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        users = UserServices.GetAll(); 
+        if (session?.CurrentUser != null && session.CurrentUser.Role != Roles.Admin)
+        {
+            NavManager.NavigateTo("/");
+        }
+    }
+
+    private void OpenAddUserDialog()
+    {
+        showAddUserDialog = true;
+        username = "";
+        password = "";
+        role = 0;
+    }
+
+    private void OnAddUserDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+            showAddUserDialog = false;
+        }
+        else
+        {
+
+
+            try
+            {
+                if (username == null || password == null || role == 0)
+                {
+                    errorMessage = "Please fill all the required fields.";
+                    return;
+                }
+
+                addUserErrorMessage = "";
+                users = UserServices.Create(session.CurrentUser.ID, username, password, role);
+                showAddUserDialog = false;
+            }
+            catch (Exception e)
+            {
+                errorMessage = e.Message;
+            }
+        }
+    }
+
+    private void OpenDeleteUserDialog(Users user)
+    {
+        deleteUser = user;
+        showDeleteUserDialog = true;
+    }
+
+    private void OnDeleteUserDialogClose(bool isCancel)
+    {
+        deleteUserErrorMessage = "";
+        if (isCancel)
+        {
+
+            showDeleteUserDialog = false;
+            deleteUser = null;
+        }
+        else
+        {
+            try
+            {
+                deleteUserErrorMessage = "";
+                users = UserServices.DeleteByUserId(deleteUser.ID);
+                showDeleteUserDialog = false;
+                deleteUser = null;
+            }
+            catch (Exception e)
+            {
+                deleteUserErrorMessage = e.Message;
+            }
+        }
+    }
+
+    private void AddHandler()
+    {
+        try
+        {
+            if (username == null || password == null || role == 0)
+            {
+                errorMessage = "Please fill all the required fields.";
+                return;
+            }
+
+            errorMessage = "";
+            successMessage = "";
+            UserServices.Create(session.CurrentUser.ID, username, password, role);
+            successMessage = "Staff added.";
+            username = null;
+            password = null;
+            role = 0;
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+        }
+    }
+}

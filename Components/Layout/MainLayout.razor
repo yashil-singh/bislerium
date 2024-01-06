@@ -1,0 +1,35 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavManager
+
+<div class="page">
+    @if (currentSession?.CurrentUser != null) {
+        <div class="sidebar">
+            <NavMenu UserRole="currentSession.CurrentUser.Role" Username="@currentSession.CurrentUser.Username" LogoutHandler="LogoutHandler" />
+        </div>
+    }
+    <main>
+        <CascadingValue Value="@currentSession">
+            @Body
+        </CascadingValue>
+    </main>
+</div>
+
+@code {
+    private GlobalState? currentSession = new();
+
+    protected override void OnInitialized()
+    {
+        UserServices.SeedUsers();
+
+        if (currentSession?.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/login");
+        }
+    }
+
+    private void LogoutHandler()
+    {
+        currentSession.CurrentUser = null;
+        NavManager.NavigateTo("/login");
+    }
+}

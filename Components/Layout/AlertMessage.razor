@@ -1,0 +1,11 @@
+﻿﻿<div class="alert alert-@Type d-flex gap-2 align-items-center" style="height: 4rem" role="alert">
+    <i class='bi bi-@(Type == "warning" || Type == "danger" ? "exclamation-circle-fill" : "info-circle-fill")' style="font-size: 2rem" />
+    @Message
+</div>
+
+@code {
+    [Parameter]
+    public string Type { get; set; }
+    [Parameter]
+    public string Message { get; set; }
+}
