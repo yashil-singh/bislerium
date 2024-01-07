@@ -36,8 +36,8 @@
                     </td>
                     <td>
                         <button disabled="@(session?.CurrentUser != null ? session.CurrentUser.ID == user.ID : false)"
-                                class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteUserDialog(user)">
-                            <i class="bi bi-trash2-fill"></i> Delete
+                                class="btn btn-danger" type="button" @onclick="()=>OpenDeleteUserDialog(user)">
+                            <i class="bi bi-trash-fill"></i> Delete
                         </button>
                     </td>
                 </tr>

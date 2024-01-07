@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject NavigationManager NavManager
 
 <div class="container p-4">
     <h1>Welcome to Bislerium Café</h1>
@@ -10,4 +11,70 @@
         savor the extraordinary. Cheers to great coffee and warm moments!"
     </p>
 
+    <nav class="d-flex justify-content-between bg-light rounded mb-3">
+        <ul class="nav nav-tabs">
+            <li class="nav-item ">
+                <a class='nav-link btn @(tabFilter == "All" ? "active" : "")' @onclick='()=>TabFilter("All")'>All</a>
+            </li>
+            <li class="nav-item">
+                <a class='nav-link btn @(tabFilter == "Coffee" ? "active" : "")' @onclick='()=>TabFilter("Coffee")'>Coffee</a>
+            </li>
+            <li class="nav-item">
+                <a class='nav-link btn @(tabFilter == "Add-In" ? "active" : "")' @onclick='()=>TabFilter("Add-In")'>Add-In</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="row row-cols-2 row-cols-lg-3">
+        @{
+            IEnumerable<MenuItems> menuItemsList = menuItems;
+
+            foreach (var menuItem in menuItemsList)
+            {
+                <div class="col">
+                    <div class="card pb-3 mb-3" style="box-shadow: var(--boxShadow); border-radius: 6px">
+                        <img src="@menuItem.ImageURL" class="card-img-top" alt="itemImage">
+                        <div class="card-body" style="min-height: 80px">
+                            <div class="d-flex">
+                                <h5 class="card-title" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 50px; max-height: 50px; width: 75%;">
+                                    @menuItem.Name
+                                </h5>
+                                <h4 class="card-subtitle mb-2 text-end" style="color: var(--primary); width: 25%;">Rs. @menuItem.Price</h4>
+                            </div>
+                        </div>
+                        <a href="#" class="btn btn-primary" style="margin: 0px 0.75rem;">Order</a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
 </div>
+
+@code {
+    [CascadingParameter]
+    private GlobalState session { get; set; }
+
+    // Current State of the menu items
+    private List<MenuItems> menuItems { get; set; }
+
+    // For sorting
+    private string tabFilter = "All";
+    private string sortBy = "coffee";
+    private string sortDirection = "up";
+
+    protected override void OnInitialized()
+    {
+        menuItems = MenuItemServices.GetAll();
+
+        if (session.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/login");
+        }
+    }
+
+    private void TabFilter(string status)
+    {
+        tabFilter = status;
+    }
+}

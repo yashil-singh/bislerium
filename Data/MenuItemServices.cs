@@ -6,7 +6,7 @@ namespace bislerium.Data
     public static class MenuItemServices
     {
         // Save all menu items
-        private static void SaveAll(Guid itemId, List<MenuItems> menuItems)
+        private static void SaveAll(List<MenuItems> menuItems)
         {
             string appDataDirectoryPath = Utils.GetAppDirectoryPath();
             string menuItemFilePath = Utils.GetItemsFilePath();
@@ -21,7 +21,7 @@ namespace bislerium.Data
         }
 
         // Get all menu items
-        private static List<MenuItems> GetAll()
+        public static List<MenuItems> GetAll()
         {
             string menuItemFilePath = Utils.GetItemsFilePath();
             if (!File.Exists(menuItemFilePath))
@@ -47,10 +47,47 @@ namespace bislerium.Data
             {
                 Name = itemName,
                 Price = itemPrice,
+                Description = description,
+                ImageURL = imageURL,
+                ItemType = itemType,
                 CreatedBy = userId
             });
-            SaveAll(userId, todos);
-            return todos;
+            SaveAll(menuItems);
+            return menuItems;
+        }
+
+        // To update a menu item
+        public static List<MenuItems> Update(Guid itemId, string itemName, float itemPrice, string itemDescription, string imageURL)
+        {
+            List<MenuItems> menuItems = GetAll();
+            MenuItems currentMenuItem = menuItems.FirstOrDefault(x => x.ID == itemId);
+
+            if (currentMenuItem == null)
+            {
+                throw new Exception("Item not found.");
+            }
+
+            currentMenuItem.Name = itemName;
+            currentMenuItem.Description = itemDescription;
+            currentMenuItem.Price = itemPrice;
+            currentMenuItem.ImageURL = imageURL;
+            SaveAll(menuItems);
+            return menuItems;
+        }
+
+        public static List<MenuItems> Delete(Guid itemId)
+        {
+            List<MenuItems> menuItems = GetAll();
+            MenuItems menuItem = menuItems.FirstOrDefault(x => x.ID == itemId);
+
+            if (menuItem == null)
+            {
+                throw new Exception("Item not found.");
+            }
+
+            menuItems.Remove(menuItem);
+            SaveAll(menuItems);
+            return menuItems;
         }
     }
 }

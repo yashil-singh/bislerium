@@ -1,47 +1,374 @@
 ﻿@page "/menu"
+@inject NavigationManager NavManager
+@using System.Diagnostics
 
 <div class="container p-4">
     <h1>Menu</h1>
     <div>
-        <nav class="d-flex justify-content-end bg-light rounded p-2">
-            <button class="btn btn-success" type="button" @* @onclick="OpenAddUserDialog" *@>
-                <span class="bi bi-plus" /> Add
+        <nav class="d-flex justify-content-between bg-light rounded">
+            <ul class="nav nav-tabs">
+                <li class="nav-item ">
+                    <a class='nav-link btn @(tabFilter == "All" ? "active" : "")' @onclick='()=>TabFilter("All")'>All</a>
+                </li>
+                <li class="nav-item">
+                    <a class='nav-link btn @(tabFilter == "Coffee" ? "active" : "")' @onclick='()=>TabFilter("Coffee")'>Coffee</a>
+                </li>
+                <li class="nav-item">
+                    <a class='nav-link btn @(tabFilter == "Add-In" ? "active" : "")' @onclick='()=>TabFilter("Add-In")'>Add-In</a>
+                </li>
+            </ul>
+            <button class="btn btn-success" type="button" @onclick="OpenAddModal">
+                <span class="bi bi-plus-lg" /> Add
             </button>
         </nav>
-        <ul class="nav nav-tabs">
-            <li class="nav-item ">
-                <a class='nav-link btn'>All</a>
-            </li>
-            <li class="nav-item">
-                <a class='nav-link btn'>Coffee</a>
-            </li>
-            <li class="nav-item">
-                <a class='nav-link btn'>Add-Ins</a>
-            </li>
-        </ul>
 
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        <div class="d-flex">
+                            <input type="search" class="form-control search" placeholder="Search" @oninput="SearchTaskName" />
+                            <a class='btn text-@(sortBy == "name" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                               @onclick='()=>SortByHandler("name")'>
+                                <span class='bi bi-sort-@(sortBy == "name" ? sortDirection : "up")' style="font-size: 1.25rem;" />
+                            </a>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="d-flex align-items-center">
+                            Price
+                            <a class='btn text-@(sortBy == "price" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                               @onclick='()=>SortByHandler("price")'>
+                                <span class='bi bi-sort-@(sortBy == "price" ? sortDirection : "up")' style="font-size: 1.25rem;" />
+                            </a>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="d-flex align-items-center">
+                            Added Date
+                            <a class='btn text-@(sortBy == "createdAt" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                               @onclick='()=>SortByHandler("createdAt")'>
+                                <span class='bi bi-sort-@(sortBy == "createdAt" ? sortDirection : "up")' style="font-size: 1.25rem;" />
+                            </a>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="d-flex align-items-center pb-2">
+                            Action
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    IEnumerable<MenuItems> menuItemsList = menuItems;
+                    if (sortBy == "name")
+                    {
+                        menuItemsList = sortDirection == "up" ? menuItemsList.OrderBy(t => t.Name) : menuItemsList.OrderByDescending(t =>
+                        t.Name);
+                    }
+                    else if (sortBy == "price")
+                    {
+                        menuItemsList = sortDirection == "up" ? menuItems.OrderBy(t => t.Price) : menuItemsList.OrderByDescending(t =>
+                        t.Price);
+                    }
+                    else if (sortBy == "type")
+                    {
+                        menuItemsList = sortDirection == "up" ? menuItemsList.OrderBy(t => t.ItemType) : menuItemsList.OrderByDescending(t =>
+                        t.ItemType);
+                    }
+                    else if (sortBy == "createdAt")
+                    {
+                        menuItemsList = sortDirection == "up" ? menuItemsList.OrderBy(t => t.CreatedAt) : menuItemsList.OrderByDescending(t =>
+                        t.CreatedAt);
+                    }
+
+                    if (tabFilter == "Coffee")
+                    {
+                        menuItemsList = menuItemsList.Where(t => t.ItemType == Items.Coffee);
+                    }
+                    else if (tabFilter == "Add-In")
+                    {
+                        menuItemsList = menuItemsList.Where(t => t.ItemType == Items.AddIn);
+                    }
+
+                    foreach (var menuItem in menuItemsList)
+                    {
+                        <tr>
+                            <td>@menuItem.Name</td>
+                            <td>Rs. @menuItem.Price</td>
+                            <td>
+                                <p class="small mb-0">
+                                    @menuItem.CreatedAt.ToString("MMM dd, yyyy h:mm tt")
+                                </p>
+                            </td>
+                            <td>
+                                <button class="btn btn-outline-primary" type="button"
+                                        @onclick="()=>OpenEditModal(menuItem)">
+                                    <span class="bi bi-pencil" /> Edit
+                                </button>
+                                <button class="btn btn-danger" type="button" @onclick="()=>OpenDeleteModal(menuItem)">
+                                    <span class="bi bi-trash-fill" /> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
 
     </div>
 </div>
 
+@if (showEditModal)
+{
+    <Modal Title="@modalTitle" OnClose="@OnEditModalClose" OkLabel="@modalOkLabel">
+        <form class="row g-3">  
+            @if (!string.IsNullOrEmpty(editErrorMessage))
+            {
+                <div class="col-md-12">
+                    <AlertMessage Type="danger" Message="@editErrorMessage" />
+                </div>  
+            }
+            <div class="col-md-12">
+                <div class="form-floating">
+                    <input name="itemName" type="text" class="form-control" @bind="currentMenuItem.Name" placeholder="Name" />
+                    <label for="taskName">Name</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <input type="number" name="itemPrice" class="form-control" @bind="currentMenuItem.Price" placeholder="Price" />
+                    <label for="itemPrice">Price</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <select name="itemType" class="form-select h-100" @bind="currentMenuItem.ItemType">
+                    <option selected value="0">Type</option>
+                        @foreach (var itemType in Enum.GetValues(typeof(Items)).Cast<Items>())
+                        {
+                            <option value="@itemType">@itemType.ToString()</option>
+                        }
+                </select>
+            </div>
+            <div class="col-md-12">
+                <div class="mb-2">
+                    <label for="itemDescription" class="form-label">Description</label>
+                    <textarea name="itemDescription" class="form-control" @bind="currentMenuItem.Description" rows="5"></textarea>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="form-floating mb-3">
+                    <input name="itemImage" type="text" class="form-control" @bind="currentMenuItem.ImageURL" placeholder="Image URL" />
+                    <label for="itemImage">Image URL</label>
+                </div>
+            </div>
+        </form>
+    </Modal>
+}
+
+@if (showDeleteModal)
+{
+    <Modal Title="Delete Todo" OnClose="@OnDeleteTodoDialogClose" OkLabel="Confirm">
+    <p>Are you sure you want to delete <strong>@currentMenuItem.Name</strong>?</p>
+    @if (!string.IsNullOrEmpty(deleteErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@deleteErrorMessage" />
+        }
+    </Modal>
+}
+
 @code {
     [CascadingParameter]
     private GlobalState session { get; set; }
-    private bool showEditItemDialog { get; set; }
-    private bool showDeleteItemDialog { get; set; }
+
+    // To control the visibility of the modal
+    private bool showEditModal { get; set; }
+    private bool showDeleteModal { get; set; }
+
+    // Current State of the menu items
     private List<MenuItems> menuItems { get; set; }
-    private MenuItems deleteItem { get; set; }
+
+    // Selected menu item
+    private MenuItems currentMenuItem { get; set; }
+
+    // For the modal view
     private string modalTitle { get; set; }
     private string modalOkLabel { get; set; }
-    private string editMenuItemErrorMessage { get; set; }
-    private string _deleteMenuItemErrorMessage { get; set; }
-    private MenuItems menuItem { get; set; }
-    private string _tabFilter = "All";
-    private string _sortBy = "coffee";
-    private string _sortDirection = "ascending";
+    private string editErrorMessage { get; set; } = "";
+    private string deleteErrorMessage { get; set; } = "";
+
+    // For sorting
+    private string tabFilter = "All";
+    private string sortBy = "coffee";
+    private string sortDirection = "up";
 
     protected override void OnInitialized()
     {
-        
+        // Get all the menu items
+        menuItems = MenuItemServices.GetAll();
+        if (session.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/login");
+        }
+        if(session.CurrentUser != null && session.CurrentUser.Role != Roles.Admin)
+        {
+            NavManager.NavigateTo("/");
+        }
+    }
+
+    // Handle sorting related queries
+    private void SortByHandler(string sortByName)
+    {
+        if(sortBy == sortByName)
+        {
+            sortDirection = sortDirection == "up" ? "down" : "up";
+        }
+        else
+        {
+            sortBy = sortByName;
+            sortDirection = "up";
+        }
+    }
+
+    // Handle search related queries
+    private void SearchItemName(ChangeEventArgs e)
+    {
+        var searchTerm = e.Value.ToString();
+        if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
+        {
+            menuItems = MenuItemServices.GetAll().Where(t =>
+            t.Name.ToLower().Contains(searchTerm.ToLower())).ToList();
+        }
+        else
+        {
+            menuItems = MenuItemServices.GetAll();
+        }
+    }
+
+    // When opening modal to add menu item
+    private void OpenAddModal()
+    {
+        modalTitle = "Add Item";
+        modalOkLabel = "Add";
+        currentMenuItem = new MenuItems();
+        currentMenuItem.ID = Guid.Empty;
+        showEditModal = true;
+    }
+
+    // When opening modal to edit menu item
+    private void OpenEditModal(MenuItems editItem)
+    {
+        modalTitle = "Edit Item";
+        modalOkLabel = "Save";
+        currentMenuItem = editItem;
+
+        showEditModal = true;
+    }
+
+    // When closing modal to edit menu item
+    private void OnEditModalClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+            showEditModal = false;
+            currentMenuItem = null;
+        }
+        else
+        {
+            try
+            {
+
+                if (currentMenuItem.Name == null)
+                {
+                    editErrorMessage = "Please provide a name for the item";
+                    return;
+                }
+
+                if (currentMenuItem.Price == null)
+                {
+                    editErrorMessage = "Please provide a price for the item.";
+                    return;
+                }
+
+                if (currentMenuItem.ItemType == 0)
+                {
+                    editErrorMessage = "Please provide a type of the item.";
+                    return;
+                }
+
+                editErrorMessage = "";
+
+                if (currentMenuItem.ImageURL == null)
+                {
+                    currentMenuItem.ImageURL = "https://ivoice.live/wp-content/uploads/2019/12/no-image-1.jpg";
+                }
+                if (currentMenuItem.ID == Guid.Empty)
+                {
+                    menuItems = MenuItemServices.Create(session.CurrentUser.ID, currentMenuItem.Name, currentMenuItem.Price.Value, currentMenuItem.Description, currentMenuItem.ImageURL, currentMenuItem.ItemType);
+                }
+                else
+                {
+                    menuItems = MenuItemServices.Update(currentMenuItem.ID, currentMenuItem.Name, currentMenuItem.Price.Value,
+                    currentMenuItem.Description, currentMenuItem.ImageURL);
+                }
+
+                showEditModal = false;
+                currentMenuItem = null;
+            }
+            catch (Exception e)
+            {
+                editErrorMessage = e.Message;
+            }
+        }
+    }
+
+    // When opening modal to delete menu item
+    private void OpenDeleteModal(MenuItems menuItem)
+    {
+        currentMenuItem = menuItem;
+        showDeleteModal = true;
+    }
+    
+    private void OnDeleteTodoDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            showDeleteModal = false;
+            currentMenuItem = null;
+        }
+        else
+        {
+            try
+            {
+                deleteErrorMessage = "";
+                menuItems = MenuItemServices.Delete(currentMenuItem.ID);
+                showDeleteModal = false;
+                currentMenuItem = null;
+            }
+            catch (Exception e)
+            {
+                deleteErrorMessage = e.Message;
+            }
+        }
+    }
+    private void TabFilter(string status)
+    {
+        tabFilter = status;
+    }
+
+    private void SearchTaskName(ChangeEventArgs e)
+    {
+        var searchTerm = e.Value.ToString();
+        if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
+        {
+            menuItems = MenuItemServices.GetAll().Where(t =>
+            t.Name.ToLower().Contains(searchTerm.ToLower())).ToList();
+        }
+        else
+        {
+            menuItems = MenuItemServices.GetAll();
+        }
     }
 }
