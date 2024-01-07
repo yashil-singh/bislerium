@@ -9,7 +9,7 @@
                 @ChildContent
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                <button type="button" class="btn" @onclick="@ModalCancel">@CancelLabel</button>
                 <button type="button" class="btn btn-primary" @onclick=@ModalOk>@OkLabel</button>
             </div>
         </div>
@@ -24,6 +24,9 @@
 
     [Parameter]
     public string OkLabel { get; set; }
+
+    [Parameter]
+    public string CancelLabel { get; set; }
 
     [Parameter]
     public EventCallback<bool> OnClose { get; set; }

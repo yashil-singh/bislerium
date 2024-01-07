@@ -29,26 +29,26 @@ namespace bislerium.Data
             var json = File.ReadAllText(orderItemsFilePath);
             return JsonSerializer.Deserialize<List<Orders>>(json);
         }
-        public static List<Orders> AddItemToOrderList(List<MenuItems> menuItems, MenuItems orderData, int quantity)
+        public static List<Orders> AddItemToOrderList(List<Orders> orderItems, MenuItems currentItem, int quantity, Guid staffID)
         {
-            List<Orders> orders = GetAllOrders();
-            bool itemExists = orders.Any(x => x.OrderID == orderData.ID);
+            orderItems = orderItems ?? new List<Orders>();
+            bool itemExists = orderItems.Any(x => x.ItemID == currentItem.ID);
             if (itemExists)
             {
-                throw new Exception("Item already added.");
+                throw new Exception("Item has already been added.");
             }
 
-            orders.Add(
-                new Orders()
-                {
-                    OrderID = new Guid(),
-                    ItemName = orderData.Name,
-                    Quantity = quantity,
-                }
-            );
+            orderItems.Add(new Orders()
+            {
+                ItemID = currentItem.ID,
+                ItemName = currentItem.Name,
+                ItemUnitPrice = (float)currentItem.Price,
+                Quantity = quantity,
+                ItemTotal = quantity * (float)currentItem.Price,
+                HandledBy = staffID
+            });
 
-            SaveAllOrders(orders);
-            return orders;
+            return orderItems;
         }
 
         public static List<MonthlyOrders> GetMonthlyOrdersByMemberNumber(string memberPhone)

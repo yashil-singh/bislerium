@@ -122,7 +122,7 @@
 
 @if (showEditModal)
 {
-    <Modal Title="@modalTitle" OnClose="@OnEditModalClose" OkLabel="@modalOkLabel">
+    <Modal Title="@modalTitle" OnClose="@OnEditModalClose" OkLabel="@modalOkLabel" CancelLabel="Cancel">
         <form class="row g-3">
             @if (!string.IsNullOrEmpty(editErrorMessage))
             {
@@ -169,7 +169,7 @@
 
 @if (showDeleteModal)
 {
-    <Modal Title="Delete Todo" OnClose="@OnDeleteModalClose" OkLabel="Confirm">
+    <Modal Title="Delete Todo" OnClose="@OnDeleteModalClose" OkLabel="Confirm" CancelLabel="Cancel">
         <p>Are you sure you want to delete <strong>@currentMenuItem.Name</strong>?</p>
         @if (!string.IsNullOrEmpty(deleteErrorMessage))
         {
@@ -180,7 +180,7 @@
 
 @if (showPasswordModal)
 {
-    <Modal Title="Authentication Required" OnClose="@OnAuthenticationModalClose" OkLabel="Authenticate">
+    <Modal Title="Authentication Required" OnClose="@OnAuthenticationModalClose" OkLabel="Authenticate" CancelLabel="Cancel">
         <div class="mt-4 mb-3">
             @if (!string.IsNullOrEmpty(authenticationErrorMessage))
             {
