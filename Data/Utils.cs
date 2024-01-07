@@ -68,6 +68,11 @@ namespace bislerium.Data
             return Path.Combine(GetAppDirectoryPath(), "items.json");
         }
 
+        public static string GetOrdersFilePath()
+        {
+            return Path.Combine(GetAppDirectoryPath(), "orders.json");
+        }
+
         public static bool IsImageUrlValid(string imageURL)
         {
             if (Uri.TryCreate(imageURL, UriKind.Absolute, out Uri uriResult)

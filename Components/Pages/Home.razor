@@ -1,55 +1,151 @@
 ﻿@page "/"
 @inject NavigationManager NavManager
+@using System.Diagnostics
 
-<div class="container p-4">
-    <h1>Welcome to Bislerium Café</h1>
+<div class="container p-4 position-relative">
+    <div class="row row-cols-2">
+        <div class='row @(orderItems?.Count() != null && orderItems?.Count() > 0 ? "col-9" : "col-12")'>
+            <h1>Welcome to Bislerium Café</h1>
 
-    <p class="body-text">
-        Where every sip is a moment of pure bliss. Get ready to indulge in the finest
-        coffee experience – brewed with passion and served with a smile. We're here
-        to elevate your coffee moments to a whole new level. Order with ease and
-        savor the extraordinary. Cheers to great coffee and warm moments!"
-    </p>
+            <p class="body-text">
+                Where every sip is a moment of pure bliss. Get ready to indulge in the finest
+                coffee experience – brewed with passion and served with a smile. We're here
+                to elevate your coffee moments to a whole new level. Order with ease and
+                savor the extraordinary. Cheers to great coffee and warm moments!"
+            </p>
 
-    <nav class="d-flex justify-content-between bg-light rounded mb-3">
-        <ul class="nav nav-tabs">
-            <li class="nav-item ">
-                <a class='nav-link btn @(tabFilter == "All" ? "active" : "")' @onclick='()=>TabFilter("All")'>All</a>
-            </li>
-            <li class="nav-item">
-                <a class='nav-link btn @(tabFilter == "Coffee" ? "active" : "")' @onclick='()=>TabFilter("Coffee")'>Coffee</a>
-            </li>
-            <li class="nav-item">
-                <a class='nav-link btn @(tabFilter == "Add-In" ? "active" : "")' @onclick='()=>TabFilter("Add-In")'>Add-In</a>
-            </li>
-        </ul>
-    </nav>
-
-    <div class="row row-cols-2 row-cols-lg-3">
-        @{
-            IEnumerable<MenuItems> menuItemsList = menuItems;
-
-            foreach (var menuItem in menuItemsList)
-            {
-                <div class="col">
-                    <div class="card pb-3 mb-3" style="box-shadow: var(--boxShadow); border-radius: 6px">
-                        <img src="@menuItem.ImageURL" class="card-img-top" alt="itemImage">
-                        <div class="card-body" style="min-height: 80px">
-                            <div class="d-flex">
-                                <h5 class="card-title" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 50px; max-height: 50px; width: 75%;">
-                                    @menuItem.Name
-                                </h5>
-                                <h4 class="card-subtitle mb-2 text-end" style="color: var(--primary); width: 25%;">Rs. @menuItem.Price</h4>
-                            </div>
-                        </div>
-                        <a href="#" class="btn btn-primary" style="margin: 0px 0.75rem;">Order</a>
+            <nav class="d-flex justify-content-between align-items-center bg-light rounded mb-3">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item ">
+                        <a class='nav-link btn @(tabFilter == "All" ? "active" : "")' @onclick='()=>TabFilter("All")'>All</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class='nav-link btn @(tabFilter == "Coffee" ? "active" : "")' @onclick='()=>TabFilter("Coffee")'>Coffee</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class='nav-link btn @(tabFilter == "Add-In" ? "active" : "")' @onclick='()=>TabFilter("Add-In")'>Add-In</a>
+                    </li>
+                </ul>
+                <div class="w-25">
+                    <div class="d-flex">
+                        <input type="search" class="form-control search" placeholder="Search" @oninput="SearchTaskName" />
                     </div>
                 </div>
-            }
-        }
-    </div>
+            </nav>
 
+            <div class='row @(orderItems?.Count() != null && orderItems?.Count() > 0 ? "row-cols-1 row-cols-lg-3" :  "row-cols-1 row-cols-lg-4")'>
+                @{
+                    IEnumerable<MenuItems> menuItemsList = menuItems;
+
+                    if (tabFilter == "Coffee")
+                    {
+                        menuItemsList = menuItemsList.Where(t => t.ItemType == Items.Coffee);
+                    }
+                    else if (tabFilter == "Add-In")
+                    {
+                        menuItemsList = menuItemsList.Where(t => t.ItemType == Items.AddIn);
+                    }
+
+                    foreach (var menuItem in menuItemsList)
+                    {
+                        <div class="col">
+                            <div class="card pb-3 mb-3" style="box-shadow: var(--boxShadow); border-radius: 6px; cursor: pointer;" @onclick="() => OpenDetailsModal(menuItem)">
+                                <img src="@menuItem.ImageURL" class="card-img-top" alt="itemImage">
+                                <div class="card-body" style="min-height: 80px">
+                                    <div class="d-flex">
+                                        <h6 class="card-title fw-bold" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 50px; max-height: 50px; width: 60%;">
+                                            @menuItem.Name
+                                        </h6>
+                                        <h5 class="card-subtitle mb-2 text-end" style="color: var(--primary); width: 40%;">Rs. @menuItem.Price</h5>
+                                    </div>
+                                </div>
+                                <button type="button" @onclick="() => OpenDetailsModal(menuItem)" class="btn btn-primary" style="margin: 0px 0.75rem;">Order</button>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class='@(orderItems?.Count() != null && orderItems?.Count() > 0 ? "cols-3" :  "d-none")'>
+            <div class="order-container position-fixed top-0 end-0">
+                @if (orderItems != null)
+                {
+                    <div class="d-flex flex-column justify-content-between h-100">
+                        <div>
+                            <h2 class="mb-3">Orders</h2>
+                            @foreach (var orderItem in orderItems)
+                            {   
+                                <div class="d-flex justify-content-between">
+                                    <p>@orderItem.ItemName x @orderItem.Quantity</p>
+                                    <strong style="color: var(--primary)">Rs. @orderItem.ItemTotal</strong>
+                                </div>
+                            }
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between pt-3" style="border-top: 2px solid lightgray">
+                                <h4>Total: </h4>
+                                <h3 style="color: var(--primary);">Rs. @orderItems.Sum(item => item.ItemTotal)</h3>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 2px solid lightgray">
+                                <button type="button" @onclick="OpenOrderCancelModal" class="btn">Cancel</button>
+                                <button class="btn btn-primary">Pay</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
+
+@if(showOrderCancelModal)
+{
+    <Modal Title="Cancel Order" OnClose="@OnOrderCancelModal" OkLabel="Confirm">
+        <p>Are you sure you want to cancel the order?</p>
+        @if (!string.IsNullOrEmpty(cancelOrderErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@cancelOrderErrorMessage" />
+        }
+    </Modal>
+}
+
+@if (showItemDetailModal)
+{
+    <Modal Title="Details" OnClose="@OnDetailsModalClose" OkLabel="Add">
+        <div>
+            @if (!string.IsNullOrEmpty(addItemErrorMessage))
+            {
+                <div class="col-md-12">
+                    <AlertMessage Type="danger" Message="@addItemErrorMessage" />
+                </div>
+            }
+            <div class="d-flex justify-content-between mb-3">
+                <div>
+                    <div>
+                        <h3>@currentItem.Name</h3>
+                        <h4 style="color: var(--primary)">Rs. @currentItem.Price</h4>
+                    </div>
+                    <div class="body-text">
+                        @currentItem.Description
+                    </div>
+                </div>
+                <img src="@currentItem.ImageURL" style="min-width: 250px; max-width: 250px;" />
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                Quantity:
+                <div style="color: var(--primary); border: 2px solid; border-color: var(--primary); border-radius: 16px; background-color: white; padding: 2px;">
+                    <div class="d-flex align-items-center gap-2">
+                        <button style="color: var(--primary); border-radius: 16px; outline: none; border: none; background-color: inherit;" @onclick="Decrement">-</button>
+                        <span style="min-width: 15px; text-align: center" id="counter">@quantity</span>
+                        <button style="color: var(--primary); border-radius: 16px; outline: none; border: none; background-color: inherit;" @onclick="Increment">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Modal>
+}
+
 
 @code {
     [CascadingParameter]
@@ -57,11 +153,50 @@
 
     // Current State of the menu items
     private List<MenuItems> menuItems { get; set; }
+    private MenuItems currentItem { get; set; }
+
+    // Selected menu items
+    private List<Orders>? orderItems { get; set; }
+
+    // To control the visibility of the modal
+    private bool showItemDetailModal { get; set; }
+    private bool showOrderCancelModal { get; set; }
+
+    // For the modal view
+    private string modalTitle { get; set; }
+    private string modalOkLabel { get; set; }
+    private string addItemErrorMessage { get; set; } = "";
+    private string cancelOrderErrorMessage { get; set; } = "";
 
     // For sorting
     private string tabFilter = "All";
     private string sortBy = "coffee";
     private string sortDirection = "up";
+
+    private int quantity { get; set; } = 0;
+    private float currentTotal { get; set; }
+
+    private void Increment()
+    {
+        quantity++;
+    }
+
+    private void Decrement()
+    {
+        if (quantity <= 0)
+        {
+            return;
+        }
+        else
+        {
+            quantity--;
+        }
+    }
+
+    private void HandleOrderCancel()
+    {
+        orderItems = null;
+    }
 
     protected override void OnInitialized()
     {
@@ -76,5 +211,108 @@
     private void TabFilter(string status)
     {
         tabFilter = status;
+    }
+
+    private void OpenDetailsModal(MenuItems currItem)
+    {
+        modalTitle = "Details";
+        modalOkLabel = "Order";
+        quantity = 0;
+        currentItem = currItem;
+        showItemDetailModal = true;
+    }
+
+    private void OpenOrderCancelModal()
+    {
+        showOrderCancelModal = true;
+    }
+
+    private void OnOrderCancelModal(bool isCancel)
+    {
+        if (isCancel)
+        {
+            showOrderCancelModal = false;
+        }
+        else
+        {
+            try
+            {
+                orderItems = null;
+                showOrderCancelModal = false;
+            }
+            catch (Exception e)
+            {
+                cancelOrderErrorMessage = e.Message;
+                return;
+            }
+        }
+    }
+
+    private void OnDetailsModalClose(bool isCancel)
+    {
+        if(isCancel)
+        {
+            showItemDetailModal = false;
+            addItemErrorMessage = "";
+        }
+        else
+        {
+            try
+            {
+                if (quantity <= 0)
+                {
+                    addItemErrorMessage = "Quantity must not be less than 1.";
+                    return;
+                }
+
+                if (currentItem == null)
+                {
+                    addItemErrorMessage = "No items are selected. Please select an item.";
+                    return;
+                }
+
+                orderItems = orderItems ?? new List<Orders>();
+
+                bool itemExists = orderItems.Any(x => x.ItemID == currentItem.ID);
+                if (itemExists)
+                {
+                    addItemErrorMessage = "Item already added.";
+                    return;
+                }
+
+                addItemErrorMessage = "";
+
+                orderItems.Add(new Orders()
+                {
+                    ItemID = currentItem.ID,
+                    ItemName = currentItem.Name,
+                    ItemUnitPrice = (float)currentItem.Price,
+                    Quantity = quantity,
+                    ItemTotal = quantity * (float)currentItem.Price,
+                    HandledBy = session.CurrentUser.ID
+                });
+
+                showItemDetailModal = false;
+                currentItem = null;
+            }
+            catch (Exception e)
+            {
+                addItemErrorMessage = e.Message;
+            }
+        }
+    }
+
+    private void SearchTaskName(ChangeEventArgs e)
+    {
+        var searchTerm = e.Value.ToString();
+        if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
+        {
+            menuItems = MenuItemServices.GetAll().Where(t =>
+            t.Name.ToLower().Contains(searchTerm.ToLower())).ToList();
+        }
+        else
+        {
+            menuItems = MenuItemServices.GetAll();
+        }
     }
 }

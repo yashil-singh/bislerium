@@ -2,8 +2,8 @@
 :root {
     --primary: #A9B388;
     --secondary: #5F6F52;
-    --tertiary: #B99470;
-    --hover: #c29b75;
+    --tertiary: #6e4835;
+    --hover: #5f3e2d;
     --boxShadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
 }
 
@@ -32,6 +32,10 @@ a, .btn-link, .nav-link {
     color: var(--secondary);
 }
 
+.btn:active, .btn:focus {
+    box-shadow: none;
+}
+
 .btn-primary {
     color: #fff;
     background-color: var(--tertiary);
@@ -57,7 +61,7 @@ a, .btn-link, .nav-link {
     .btn-primary:active:focus, .btn-primary:focus {
         background-color: var(--hover);
         border-color: var(--tertiary);
-        box-shadow: 0 0 0 0.25rem #e8b98c;
+        box-shadow: 0 0 0 0.25rem #ab6f51;
     }
 
 .btn-outline-primary {

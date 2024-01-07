@@ -1,7 +1,5 @@
 ﻿
 using System.Text.Json;
-using Windows.System;
-
 
 namespace bislerium.Data
 {
@@ -34,7 +32,7 @@ namespace bislerium.Data
         }
 
         //To save all the users
-        private static void SaveAll(List<Users> users)
+        public static void SaveAll(List<Users> users)
         {
             string appDataDirectoryPath = Utils.GetAppDirectoryPath();
             string appUsersFilePath = Utils.GetAppUsersFilePath();

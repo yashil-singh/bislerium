@@ -1,0 +1,8 @@
+﻿
+.order-container {
+    border-radius: 6px;
+    box-shadow: var(--boxShadow);
+    width: 320px;
+    height: 100vh;
+    padding: 1.25rem;
+}

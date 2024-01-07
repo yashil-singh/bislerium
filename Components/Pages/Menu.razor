@@ -123,12 +123,12 @@
 @if (showEditModal)
 {
     <Modal Title="@modalTitle" OnClose="@OnEditModalClose" OkLabel="@modalOkLabel">
-        <form class="row g-3">  
+        <form class="row g-3">
             @if (!string.IsNullOrEmpty(editErrorMessage))
             {
                 <div class="col-md-12">
                     <AlertMessage Type="danger" Message="@editErrorMessage" />
-                </div>  
+                </div>
             }
             <div class="col-md-12">
                 <div class="form-floating">
@@ -145,10 +145,10 @@
             <div class="col-md-6">
                 <select name="itemType" class="form-select h-100" @bind="currentMenuItem.ItemType">
                     <option selected value="0">Type</option>
-                        @foreach (var itemType in Enum.GetValues(typeof(Items)).Cast<Items>())
-                        {
-                            <option value="@itemType">@itemType.ToString()</option>
-                        }
+                    @foreach (var itemType in Enum.GetValues(typeof(Items)).Cast<Items>())
+                    {
+                        <option value="@itemType">@itemType.ToString()</option>
+                    }
                 </select>
             </div>
             <div class="col-md-12">
@@ -169,12 +169,32 @@
 
 @if (showDeleteModal)
 {
-    <Modal Title="Delete Todo" OnClose="@OnDeleteTodoDialogClose" OkLabel="Confirm">
-    <p>Are you sure you want to delete <strong>@currentMenuItem.Name</strong>?</p>
-    @if (!string.IsNullOrEmpty(deleteErrorMessage))
+    <Modal Title="Delete Todo" OnClose="@OnDeleteModalClose" OkLabel="Confirm">
+        <p>Are you sure you want to delete <strong>@currentMenuItem.Name</strong>?</p>
+        @if (!string.IsNullOrEmpty(deleteErrorMessage))
         {
             <AlertMessage Type="danger" Message="@deleteErrorMessage" />
         }
+    </Modal>
+}
+
+@if (showPasswordModal)
+{
+    <Modal Title="Authentication Required" OnClose="@OnAuthenticationModalClose" OkLabel="Authenticate">
+        <div class="mt-4 mb-3">
+            @if (!string.IsNullOrEmpty(authenticationErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@authenticationErrorMessage" />
+            }
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" name="username" placeholder="Enter your username" @bind=username>
+                <label for="username">Username</label>
+            </div>
+            <div class="form-floating">
+                <input type="password" class="form-control" name="password" placeholder="Enter your password" @bind=password>
+                <label for="password">Password</label>
+            </div>
+        </div>
     </Modal>
 }
 
@@ -185,6 +205,7 @@
     // To control the visibility of the modal
     private bool showEditModal { get; set; }
     private bool showDeleteModal { get; set; }
+    private bool showPasswordModal { get; set; }
 
     // Current State of the menu items
     private List<MenuItems> menuItems { get; set; }
@@ -197,11 +218,19 @@
     private string modalOkLabel { get; set; }
     private string editErrorMessage { get; set; } = "";
     private string deleteErrorMessage { get; set; } = "";
+    private string loginErrorMessage { get; set; } = "";
+    private bool authenticationCheck { get; set; }
+    private string authenticationErrorMessage { get; set; } = "";
+
+    private Users currentUser { get; set; }
 
     // For sorting
     private string tabFilter = "All";
     private string sortBy = "coffee";
     private string sortDirection = "up";
+
+    private string? username { get; set; }
+    private string? password { get; set; }
 
     protected override void OnInitialized()
     {
@@ -211,7 +240,7 @@
         {
             NavManager.NavigateTo("/login");
         }
-        if(session.CurrentUser != null && session.CurrentUser.Role != Roles.Admin)
+        if (session.CurrentUser != null && session.CurrentUser.Role != Roles.Admin)
         {
             NavManager.NavigateTo("/");
         }
@@ -220,7 +249,7 @@
     // Handle sorting related queries
     private void SortByHandler(string sortByName)
     {
-        if(sortBy == sortByName)
+        if (sortBy == sortByName)
         {
             sortDirection = sortDirection == "up" ? "down" : "up";
         }
@@ -246,6 +275,50 @@
         }
     }
 
+    // Handle authentication requirement
+    private void OnAuthenticationModalClose(bool isCancel)
+    {
+        authenticationErrorMessage = "";
+        if (isCancel)
+        {
+            showPasswordModal = false;
+            showEditModal = false;
+            showDeleteModal = false;
+            username = "";
+            password = "";
+        }
+        else
+        {
+            try
+            {
+                bool validPassword = Utils.VerifyHash(password, session.CurrentUser.PasswordHash);
+
+                if (username == null || password == null)
+                {
+                    authenticationErrorMessage = "Please fill in all the fields.";
+                    return;
+                }
+
+                if (session.CurrentUser.Username != username || !validPassword)
+                {
+                    authenticationErrorMessage = "Invalid username or password";
+                    return;
+                }
+
+                showPasswordModal = false;
+                username = "";
+                password = "";
+            }
+            catch (Exception e)
+            {
+                username = "";
+                password = "";
+                authenticationErrorMessage = e.Message;
+                return;
+            }
+        }
+    }
+
     // When opening modal to add menu item
     private void OpenAddModal()
     {
@@ -253,6 +326,7 @@
         modalOkLabel = "Add";
         currentMenuItem = new MenuItems();
         currentMenuItem.ID = Guid.Empty;
+        showPasswordModal = true;
         showEditModal = true;
     }
 
@@ -262,7 +336,7 @@
         modalTitle = "Edit Item";
         modalOkLabel = "Save";
         currentMenuItem = editItem;
-
+        showPasswordModal = true;
         showEditModal = true;
     }
 
@@ -327,10 +401,11 @@
     private void OpenDeleteModal(MenuItems menuItem)
     {
         currentMenuItem = menuItem;
+        showPasswordModal = true;
         showDeleteModal = true;
     }
-    
-    private void OnDeleteTodoDialogClose(bool isCancel)
+
+    private void OnDeleteModalClose(bool isCancel)
     {
         if (isCancel)
         {

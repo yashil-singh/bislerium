@@ -6,7 +6,7 @@ namespace bislerium.Data
     public static class MenuItemServices
     {
         // Save all menu items
-        private static void SaveAll(List<MenuItems> menuItems)
+        public static void SaveAll(List<MenuItems> menuItems)
         {
             string appDataDirectoryPath = Utils.GetAppDirectoryPath();
             string menuItemFilePath = Utils.GetItemsFilePath();
