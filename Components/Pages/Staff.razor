@@ -100,22 +100,22 @@
     private string username { get; set; }
     private string password { get; set; }
     private Roles role { get; set; }
-    private string errorMessage { get; set; } = "";
-    private string successMessage { get; set; } = "";
     private Users ?deleteUser { get; set; }
 
-    //Modals
+    // To control modal visibility
     private bool showDeleteUserDialog { get; set; }
     private bool showAddUserDialog { get; set; }
 
-    //Error Messages
+    // Messages
+    private string errorMessage { get; set; } = "";
+    private string successMessage { get; set; } = "";
     private string addUserErrorMessage { get; set; }
     private string deleteUserErrorMessage { get; set; }
 
     protected override void OnInitialized()
     {
         users = UserServices.GetAll(); 
-        if (session?.CurrentUser != null && session.CurrentUser.Role != Roles.Admin)
+        if (session?.CurrentUser == null || session.CurrentUser.Role != Roles.Admin)
         {
             NavManager.NavigateTo("/");
         }

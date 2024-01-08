@@ -1,9 +1,166 @@
 ﻿@page "/membership"
+@inject NavigationManager NavManager
 
 <div class="container p-4">
     <h1>Membership</h1>
+    <div class="d-flex justify-content-between bg-light rounded p-2">
+        <input type="search" class="form-control search w-25" placeholder="Search membership number" @oninput="SearchMemberNumber" />
+        <button class="btn btn-success" type="button" @onclick="OpenAddMemberModal">
+            <span class="bi bi-plus" /> Add
+        </button>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Membership Number</th>
+                <th>Member Name</th>
+                <th>Created At</th>
+                <th>CreatedBy</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var member in members)
+            {
+                <tr>
+                    <td>@member.MemberNumber</td>
+                    <td>@member.MemberName</td>
+                    <td>@member.CreatedAt.ToString("MMM dd, yyyy h:mm tt")</td>
+                    <td>
+                        @{
+                            var creator = UserServices.GetById(member.CreatedBy);
+                            <span>@(creator == null ? "N/A" : creator.Username)</span>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" type="button" @onclick="()=>OpenDeleteMemberModal(member)">
+                            <i class="bi bi-trash-fill"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 
-@code {
+@if (showAddMemberModal)
+{
+    <Modal Title="Add Membership" OnClose="@OnAddMemberModalClose" OkLabel="Add" CancelLabel="Cancel">
+        <div class="mt-3">
+            @if (!string.IsNullOrEmpty(addMemberErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@addMemberErrorMessage" />
+            }
+            else if (!string.IsNullOrEmpty(successMessage))
+            {
+                <AlertMessage Type="success" Message="@successMessage" />
+            }
+        </div>
+        <div class="form-floating mt-3 mb-3">
+            <input type="text" class="form-control" name="number" placeholder="Customer Phone Number" @bind="memberNumber">
+            <label for="number">Customer Phone Number</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" name="name" placeholder="Customer Name" @bind="memberName">
+            <label for="name">Customer Name</label>
+        </div>
+    </Modal>
+}
 
+@* @if (showDeleteUserDialog)
+{
+    <Modal Title="Delete User" OnClose="@OnDeleteUserDialogClose" OkLabel="Confirm" CancelLabel="Cancel">
+        <p>Are you sure you want to delete <strong>@deleteUser?.Username</strong> user and their data?</p>
+        @if (!string.IsNullOrEmpty(deleteUserErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@deleteUserErrorMessage" />
+        }
+    </Modal>
+} *@
+
+@code {
+    [CascadingParameter]
+    private GlobalState session { get; set; }
+    private List<Members> members { get; set; }
+    private string memberNumber { get; set; }
+    private string memberName { get; set; }
+    private Members deleteMembership { get; set; }
+
+    // To control modal visibility
+    private bool showDeleteMemberModal { get; set; }
+    private bool showAddMemberModal { get; set; }
+
+    // Messages
+    private string errorMessage { get; set; } = "";
+    private string successMessage { get; set; } = "";
+    private string addMemberErrorMessage { get; set; }
+    private string deleteMemberErrorMessage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        members = MemberServices.GetAll();
+        if (session.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/");
+        }
+    }
+
+    private void OpenAddMemberModal()
+    {
+        showAddMemberModal = true;
+        memberName = "";
+        memberNumber = "";
+        addMemberErrorMessage = "";
+    }
+
+    private void OpenDeleteMemberModal(Members member)
+    {
+        // deleteUser = member;
+        // showDeleteUserDialog = true;
+    }
+
+    private void OnAddMemberModalClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+            showAddMemberModal = false;
+        }
+        else
+        {
+            try
+            {
+                if (memberName == null || memberNumber == null)
+                {
+                    addMemberErrorMessage = "Please fill all the required fields.";
+                    return;
+                }
+
+                addMemberErrorMessage = "";
+                members = MemberServices.Create(session.CurrentUser.ID , memberName, memberNumber);
+
+                successMessage = "Membership created successfully.";
+                memberName = "";
+                memberNumber = "";
+            }
+            catch (Exception e)
+            {
+                addMemberErrorMessage = e.Message;
+            }
+        }
+    }
+
+    private void SearchMemberNumber(ChangeEventArgs e)
+    {
+        var searchTerm = e.Value.ToString();
+        if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
+        {
+            members = MemberServices.GetAll().Where(t =>
+            t.MemberNumber.Contains(searchTerm)).ToList();
+        }
+        else
+        {
+            members = MemberServices.GetAll();
+        }
+    }
 }

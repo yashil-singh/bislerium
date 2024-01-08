@@ -64,6 +64,11 @@ a, .btn-link, .nav-link {
         box-shadow: 0 0 0 0.25rem #ab6f51;
     }
 
+    .btn-primary:disabled {
+        background-color: var(--tertiary);
+        border-color: var(--tertiary);
+        opacity: 0.7;
+    }
 .btn-outline-primary {
     color: var(--primary);
     border-color: var(--primary);

@@ -14,7 +14,20 @@ namespace bislerium.Data
         {
             string ordersFilePath = Utils.GetOrdersFilePath();
 
-            var json = JsonSerializer.Serialize(orders);
+            List<Orders> existingOrders = new List<Orders>();
+
+            // Read existing orders from the file if it exists
+            if (File.Exists(ordersFilePath))
+            {
+                var existingJson = File.ReadAllText(ordersFilePath);
+                existingOrders = JsonSerializer.Deserialize<List<Orders>>(existingJson);
+            }
+
+            // Append new orders to existing orders
+            existingOrders.AddRange(orders);
+
+            // Serialize and save the combined orders
+            var json = JsonSerializer.Serialize(existingOrders);
             File.WriteAllText(ordersFilePath, json);
         }
 
@@ -38,6 +51,8 @@ namespace bislerium.Data
                 throw new Exception("Item has already been added.");
             }
 
+
+
             orderItems.Add(new Orders()
             {
                 ItemID = currentItem.ID,
@@ -49,7 +64,7 @@ namespace bislerium.Data
             });
 
             return orderItems;
-        }
+        } 
 
         public static List<MonthlyOrders> GetMonthlyOrdersByMemberNumber(string memberPhone)
         {
