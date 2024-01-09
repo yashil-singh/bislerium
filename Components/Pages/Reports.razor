@@ -1,9 +1,95 @@
 ﻿@page "/reports"
+@inject NavigationManager NavManager
 
 <div class="container p-4">
-    <h1>Reports</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Reports</h1>
+        <div>
+            <button class="btn btn-primary">Generate PDF</button>
+        </div>
+    </div>
+
+    <h5>Top 5s</h5>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Total Revenue</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in GetTop5ItemsByRevenue())
+            {
+                <tr>
+                    <td>@item.ItemName</td>
+                    <t>Rs. @item.TotalRevenue</t   >
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-between">
+        <h5>Transactions</h5>
+        <p>Total Revenue: <strong>Rs. @(orders.Sum(order => order.ItemTotal))</strong></p>
+    </div>
+        
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Order Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in orders)
+            {
+                <tr>
+                    <td>@order.ItemName</td>
+                    <td>Rs. @order.ItemUnitPrice</td>
+                    <td>@order.Quantity</td>
+                    <td>Rs. @order.ItemTotal</td>
+                    <td>@order.OrderDate.ToString("MMM dd, yyyy h:mm tt")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 
 @code {
+    [CascadingParameter]
+    private GlobalState session { get; set; }
+    private List<Orders> orders { get; set; }
+    private List<Orders> topCoffee { get; set; }
 
+    protected override void OnInitialized()
+    {
+        orders = OrderServices.GetAllOrders();
+    }
+
+    private List<TopItem> GetTop5ItemsByRevenue()
+    {
+        var topItems = orders
+            .GroupBy(order => order.ItemID)
+            .Select(group => new TopItem
+                {
+                    ItemName = group.First().ItemName,
+                    TotalRevenue = group.Sum(order => order.ItemTotal)
+                })
+            .OrderByDescending(item => item.TotalRevenue)
+            .Take(5)
+            .ToList();
+
+        return topItems;
+    }
+
+    private class TopItem
+    {
+        public string ItemName { get; set; }
+        public float TotalRevenue { get; set; }
+    }
 }

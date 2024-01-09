@@ -11,6 +11,7 @@ namespace bislerium.Data
         public int Quantity { get; set; } = 1;
         public float ItemUnitPrice { get; set; }
         public float ItemTotal { get; set; }
+        public float Discount { get; set; }
         public string? MemberNumber { get; set; }
         public DayOfWeek OrderDay { get; set; } = DateTime.Now.DayOfWeek;
         public DateTime OrderDate { get; set; } = DateTime.Now;

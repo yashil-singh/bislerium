@@ -64,36 +64,43 @@ namespace bislerium.Data
             });
 
             return orderItems;
-        } 
+        }
 
-        public static List<MonthlyOrders> GetMonthlyOrdersByMemberNumber(string memberPhone)
+        public static int GetMonthlyOrderCountByMemberNumber(string memberPhone)
         {
             string ordersFilePath = Utils.GetOrdersFilePath();
 
             if (!File.Exists(ordersFilePath))
             {
-                return new List<MonthlyOrders>();
+                return 0;
             }
 
             var json = File.ReadAllText(ordersFilePath);
             var orders = JsonSerializer.Deserialize<List<Orders>>(json);
 
-            var memberOrderData = orders.Where(x => x.MemberNumber == memberPhone && x.OrderDay != DayOfWeek.Sunday && x.OrderDay != DayOfWeek.Saturday && x.OrderDate.Month == DateTime.Now.Month).ToList();
-            var orderCountCurrentMonth = memberOrderData.Count();
-            var monthlyOrderData = new List<MonthlyOrders>();
+            var memberMonthRecords = orders
+            .Where(x => x.MemberNumber == memberPhone && x.OrderDay != DayOfWeek.Sunday && x.OrderDay != DayOfWeek.Saturday && x.OrderDate.Month == DateTime.Now.Month)
+            .GroupBy(x => new { x.OrderDate.Date })  // Group by date
+            .Select(group => group.First())  // Select the first item in each group
+            .ToList();
 
-            foreach (var order in memberOrderData)
-            {
-                monthlyOrderData.Add( new MonthlyOrders()
-                    {
-                        MemberNumber = order.MemberNumber,
-                        OrderMonth = order.OrderDate.Month,
-                        OderCount = orderCountCurrentMonth,
-                    }
-                );
-            }
+            /*            var memberOrderData = orders.Where(x => x.MemberNumber == memberPhone && x.OrderDay != DayOfWeek.Sunday && x.OrderDay != DayOfWeek.Saturday && x.OrderDate.Month == DateTime.Now.Month).ToList();
+            */
+            /*            var monthlyOrderData = new List<MonthlyOrders>();
 
-            return monthlyOrderData;
+
+                        foreach (var order in memberMonthRecords)
+                        {
+                            monthlyOrderData.Add( new MonthlyOrders()
+                                {
+                                    MemberNumber = order.MemberNumber,
+                                    OrderMonth = order.OrderDate.Month,
+                                    OderCount = orderCountCurrentMonth,
+                                }
+                            );
+                        }*/
+            var orderCountCurrentMonth = memberMonthRecords.Count();
+            return orderCountCurrentMonth;
         }
     }
 }

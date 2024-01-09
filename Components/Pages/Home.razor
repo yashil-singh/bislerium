@@ -105,6 +105,11 @@
                             </div>
                             <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 2px solid lightgray">
                                 <button type="button" @onclick="OpenOrderCancelModal" class="btn">Cancel</button>
+                                @if (showRedeem)
+                                {
+                                    <button class="btn btn-outline-primary">Redeem</button>
+                                }
+
                                 <button type="button" class="btn btn-primary" @onclick="HandleCheckOut" disabled="@(isDisabled ? true : false)">Check Out</button>
                             </div>
                         </div>
@@ -114,6 +119,7 @@
         </div>
     </div>
 </div>
+
 
 @if(showOrderCancelModal)
 {
@@ -153,9 +159,10 @@
                         <h3>@currentItem.Name</h3>
                         <h4 style="color: var(--primary)">Rs. @currentItem.Price</h4>
                     </div>
-                    <div class="body-text">
+                    <strong>Description:</strong>
+                    <p class="body-text">
                         @currentItem.Description
-                    </div>
+                    </p>
                 </div>
                 <img src="@currentItem.ImageURL" style="min-width: 250px; max-width: 250px;" />
             </div>
@@ -177,6 +184,21 @@
 {
     <Modal Title="Order Placed" OnClose="@OnOrderSuccessModalClose" OkLabel="Finish">
         <p>Your order has been received, please stay tuned while it is being prepared.</p>
+        @if (showRedeem)
+        {
+            <div class="d-flex justify-content-between " style="max-height: 35px;">
+                <p style="color: var(--secondary)">A free coffee is available. Redeem now!</p>
+                <button type="button" class="btn btn-outline-primary" @onclick="OpenRedeemCoffeeModal"> Redeem</button>
+            </div>
+        }
+    </Modal>
+}
+
+
+@if (showRedeemCoffeeModal)
+{
+    <Modal Title="Coffee Redeemed" OnClose="@OnRedeemCoffeeModalClose" OkLabel="Ok">
+        Enjoy your free coffee!
     </Modal>
 }
 
@@ -200,6 +222,7 @@
     private bool showItemCancelModal { get; set; }
     private bool showEditItemModal { get; set; }
     private bool showOrderSuccessModal { get; set; }
+    private bool showRedeemCoffeeModal { get; set; }
 
     // For the modal view
     private string modalTitle { get; set; }
@@ -218,6 +241,9 @@
     private int quantity { get; set; } = 0;
     private float currentTotal { get; set; }
     private string? memberNumber { get; set; }
+    private int memberOrderCount { get; set; }
+    private bool showRedeem { get; set; } = false;
+    private bool showDiscount { get; set; } = false;
 
     private bool isDisabled { get; set; }
 
@@ -272,7 +298,12 @@
     {
         showOrderCancelModal = true;
         checkoutErrorMessage = "";
-        
+
+    }
+
+    private void OpenRedeemCoffeeModal()
+    {
+        showRedeemCoffeeModal = true;
     }
 
     // Initial the modal to remove an item from the orders list
@@ -329,6 +360,8 @@
                 orderItems = null;
                 showOrderCancelModal = false;
                 memberNumber = "";
+                showRedeem = false;
+                showDiscount = false;
             }
             catch (Exception e)
             {
@@ -404,6 +437,15 @@
         editingOrderItem = null;
         currentOrderItem = null;
         showOrderSuccessModal = false;
+        memberNumber = "";
+        showRedeem = false;
+        showDiscount = false;
+    }
+
+    private void OnRedeemCoffeeModalClose()
+    {
+        showRedeem = false;
+        showRedeemCoffeeModal = false;
     }
 
     // To handle checkout/store order record to json
@@ -421,16 +463,35 @@
             {
                 if(memberNumber != null)
                 {
-                    var validMemberNum = MemberServices.GetByNumber(memberNumber);
-                    if(validMemberNum == null)
+                    var validMember = MemberServices.GetByNumber(memberNumber);
+                    if(validMember == null)
                     {
                         checkoutErrorMessage = "Member not found.";
                         return;
                     }
+
+                    // Get the total purchase count
+                    var monthlyOrderCount = OrderServices.GetMonthlyOrderCountByMemberNumber(validMember.MemberNumber);
+
+                    var businessDays = Utils.GetBusinessDaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
+
+                    // Check purchase count to redeem a free item
+                    if (monthlyOrderCount > 0 && monthlyOrderCount == monthlyOrderCount)
+                    {
+                        foreach (var orderItem in orderItems)
+                        {
+                            orderItem.Discount = 10;
+                        }
+
+                        showDiscount = true;
+                    }
+
                     foreach (var orderItem in orderItems)
                     {
                         orderItem.MemberNumber = memberNumber;
                     }
+
+                    
                 }
                 OrderServices.SaveAllOrders(orderItems);
                 showOrderSuccessModal = true;

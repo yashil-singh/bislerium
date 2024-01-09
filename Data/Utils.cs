@@ -89,5 +89,23 @@ namespace bislerium.Data
             return false;
         }
 
+        public static int GetBusinessDaysInMonth(int year, int month)
+        {
+            DateTime startDate = new DateTime(year, month, 1);
+            DateTime endDate = startDate.AddMonths(1).AddDays(-1);
+
+            int businessDays = 0;
+
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    businessDays++;
+                }
+            }
+
+            return businessDays;
+        }
+
     }
 }
