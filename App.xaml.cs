@@ -1,4 +1,6 @@
-﻿namespace bislerium
+﻿using QuestPDF.Infrastructure;
+
+namespace bislerium
 {
     public partial class App : Application
     {
@@ -7,6 +9,8 @@
             InitializeComponent();
 
             MainPage = new MainPage();
+
+            QuestPDF.Settings.License = LicenseType.Community;
         }
     }
 }

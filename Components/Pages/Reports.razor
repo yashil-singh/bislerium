@@ -23,7 +23,7 @@
 
             <button class="btn btn-primary" @onclick="FilterOrders">View</button>
         </div>
-        <button class="btn btn-primary">Generate PDF</button>
+        <button class="btn btn-primary" @onclick="HandleGeneratePDF">Generate PDF</button>
     </div>
 
     <div class="mb-5">
@@ -100,7 +100,7 @@
     private List<Orders> orders { get; set; }
     private List<Orders> topItems { get; set; }
 
-    private string selectedOption;
+    private string selectedOption { get; set; } = "all";
     private DateTime selectedDate = DateTime.Today;
 
     protected override void OnInitialized()
@@ -124,10 +124,16 @@
         }
     }
 
+    // Class to store the top items
+    public class TopItem
+    {
+        public string ItemName { get; set; }
+        public float TotalRevenue { get; set; }
+    }
 
     private List<TopItem> GetTop5ItemsByRevenue()
     {
-        var topItems = orders
+        List<TopItem> topItems = orders
             .SelectMany(order => order.Items)
             .GroupBy(item => item.ItemID)
             .Select(group => new TopItem
@@ -142,9 +148,23 @@
         return topItems;
     }
 
-    private class TopItem
+    private void HandleGeneratePDF()
     {
-        public string ItemName { get; set; }
-        public float TotalRevenue { get; set; }
+        string fileName = "";
+        if (selectedOption == "all")
+        {
+            fileName = "all_orders.pdf";
+        }
+        else if(selectedOption == "daily")
+        {
+            fileName = selectedDate.ToString("dd-MM-yyyy") + "_orders.pdf";
+        }
+        else
+        {
+            fileName = selectedDate.ToString("MMM yyyy") + "_orders.pdf";
+        }
+
+        var topItems = GetTop5ItemsByRevenue();
+        PDFService.SaveAllOrdersPDF(topItems, orders.Sum(order => order.OrderTotal), orders, fileName);
     }
 }
