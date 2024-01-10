@@ -89,9 +89,8 @@ namespace bislerium.Data
             return false;
         }
 
-        public static int GetBusinessDaysInMonth(int year, int month)
+        public static int GetBusinessDays(DateTime startDate)
         {
-            DateTime startDate = new DateTime(year, month, 1);
             DateTime endDate = startDate.AddMonths(1).AddDays(-1);
 
             int businessDays = 0;

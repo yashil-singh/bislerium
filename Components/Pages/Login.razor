@@ -45,7 +45,7 @@
                 return;
             }
             errorMessage = "";
-            session.CurrentUser = UserServices.Login(username, password);
+            session.CurrentUser = UserService.Login(username, password);
 
             if (session != null)
             {

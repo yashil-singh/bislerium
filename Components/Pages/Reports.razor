@@ -1,47 +1,67 @@
 ﻿@page "/reports"
 @inject NavigationManager NavManager
+@using System.Diagnostics
 
 <div class="container p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Reports</h1>
-        <div>
-            <button class="btn btn-primary">Generate PDF</button>
+        <div class="d-flex justify-content-center gap-2" style="height: 40px;">
+            <select class="form-select" @bind="selectedOption">
+                <option value="all">All</option>
+                <option value="daily">Daily</option>
+                <option value="monthly">Monthly</option>
+            </select>
+
+            @if (selectedOption == "daily")
+            {
+                <input type="date" class="form-control text-left" placeholder="Select Date" @bind="selectedDate">
+            }
+            else if (selectedOption == "monthly")
+            {
+                <input type="month" class="form-control text-left" placeholder="Select Month" @bind="selectedDate">
+            }
+
+            <button class="btn btn-primary" @onclick="FilterOrders">View</button>
         </div>
+        <button class="btn btn-primary">Generate PDF</button>
     </div>
 
-    <h5>Top 5s</h5>
+    <div class="mb-5">
+        <h5>Top 5s</h5>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>Total Revenue</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in GetTop5ItemsByRevenue())
-            {
+        <table class="table">
+            <thead>
                 <tr>
-                    <td>@item.ItemName</td>
-                    <t>Rs. @item.TotalRevenue</t   >
+                    <th>Items</th>
+                    <th>Total Revenue</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in GetTop5ItemsByRevenue())
+                {
+                    <tr>
+                        <td>@item.ItemName</td>
+                        <td>Rs. @item.TotalRevenue</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
 
     <div class="d-flex justify-content-between">
         <h5>Transactions</h5>
-        <p>Total Revenue: <strong>Rs. @(orders.Sum(order => order.ItemTotal))</strong></p>
+        <p style="font-size: 20px;">Total Revenue: <strong style="color: var(--primary);">Rs. @(orders.Sum(order => order.OrderTotal))</strong></p>
     </div>
         
     
     <table class="table">
         <thead>
             <tr>
+                <th>Customer Number</th>
                 <th>Item</th>
-                <th>Unit Price</th>
-                <th>Quantity</th>
                 <th>Total</th>
+                <th>Discount</th>
                 <th>Order Date</th>
             </tr>
         </thead>
@@ -49,36 +69,71 @@
             @foreach (var order in orders)
             {
                 <tr>
-                    <td>@order.ItemName</td>
-                    <td>Rs. @order.ItemUnitPrice</td>
-                    <td>@order.Quantity</td>
-                    <td>Rs. @order.ItemTotal</td>
+                    <td>@order.MemberNumber</td>
+                    <td>
+                        @foreach (var menuItem in order.Items)
+                        {
+                            var menuItemDetails = MenuItemService.GetItemByID(menuItem.ItemID);
+                            if (menuItem != null)
+                            {
+                                <p>@menuItemDetails.Name x @menuItem.Quantity - Rs. @menuItem.ItemTotal</p>
+                            }
+                        }
+                    </td>
+                    <td>Rs. @order.OrderTotal</td>
+                    <td>@order.Discount%</td>
                     <td>@order.OrderDate.ToString("MMM dd, yyyy h:mm tt")</td>
                 </tr>
             }
         </tbody>
+        
     </table>
+    @if (orders.Count == 0)
+    {
+        <h2 class="text-center">No orders found!</h2>
+    }
 </div>
 
 @code {
     [CascadingParameter]
     private GlobalState session { get; set; }
     private List<Orders> orders { get; set; }
-    private List<Orders> topCoffee { get; set; }
+    private List<Orders> topItems { get; set; }
+
+    private string selectedOption;
+    private DateTime selectedDate = DateTime.Today;
 
     protected override void OnInitialized()
     {
-        orders = OrderServices.GetAllOrders();
+        orders = OrderService.GetAllOrders();
     }
+
+    private void FilterOrders()
+    {
+        if(selectedOption == "daily")
+        {
+            orders = OrderService.GetOrdersByDate(selectedDate);
+        }
+        else if(selectedOption == "monthly")
+        {
+            orders = OrderService.GetOrdersByMonth(selectedDate);
+        }
+        else
+        {
+            orders = OrderService.GetAllOrders();
+        }
+    }
+
 
     private List<TopItem> GetTop5ItemsByRevenue()
     {
         var topItems = orders
-            .GroupBy(order => order.ItemID)
+            .SelectMany(order => order.Items)
+            .GroupBy(item => item.ItemID)
             .Select(group => new TopItem
                 {
-                    ItemName = group.First().ItemName,
-                    TotalRevenue = group.Sum(order => order.ItemTotal)
+                    ItemName = MenuItemService.GetItemByID(group.Key)?.Name,
+                    TotalRevenue = group.Sum(item => item.ItemTotal)
                 })
             .OrderByDescending(item => item.TotalRevenue)
             .Take(5)

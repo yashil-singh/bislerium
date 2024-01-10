@@ -3,8 +3,7 @@
 
 <div class="container p-4">
     <h1>Membership</h1>
-    <div class="d-flex justify-content-between bg-light rounded p-2">
-        <input type="search" class="form-control search w-25" placeholder="Search membership number" @oninput="SearchMemberNumber" />
+    <div class="d-flex justify-content-end bg-light rounded p-2">
         <button class="btn btn-success" type="button" @onclick="OpenAddMemberModal">
             <span class="bi bi-plus" /> Add
         </button>
@@ -17,7 +16,6 @@
                 <th>Member Name</th>
                 <th>Created At</th>
                 <th>CreatedBy</th>
-                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -29,14 +27,9 @@
                     <td>@member.CreatedAt.ToString("MMM dd, yyyy h:mm tt")</td>
                     <td>
                         @{
-                            var creator = UserServices.GetById(member.CreatedBy);
+                            var creator = UserService.GetById(member.CreatedBy);
                             <span>@(creator == null ? "N/A" : creator.Username)</span>
                         }
-                    </td>
-                    <td>
-                        <button class="btn btn-danger" type="button" @onclick="()=>OpenDeleteMemberModal(member)">
-                            <i class="bi bi-trash-fill"></i> Delete
-                        </button>
                     </td>
                 </tr>
             }
@@ -68,17 +61,6 @@
     </Modal>
 }
 
-@* @if (showDeleteUserDialog)
-{
-    <Modal Title="Delete User" OnClose="@OnDeleteUserDialogClose" OkLabel="Confirm" CancelLabel="Cancel">
-        <p>Are you sure you want to delete <strong>@deleteUser?.Username</strong> user and their data?</p>
-        @if (!string.IsNullOrEmpty(deleteUserErrorMessage))
-        {
-            <AlertMessage Type="danger" Message="@deleteUserErrorMessage" />
-        }
-    </Modal>
-} *@
-
 @code {
     [CascadingParameter]
     private GlobalState session { get; set; }
@@ -99,7 +81,7 @@
 
     protected override void OnInitialized()
     {
-        members = MemberServices.GetAll();
+        members = MemberService.GetAll();
         if (session.CurrentUser == null)
         {
             NavManager.NavigateTo("/");
@@ -112,12 +94,6 @@
         memberName = "";
         memberNumber = "";
         addMemberErrorMessage = "";
-    }
-
-    private void OpenDeleteMemberModal(Members member)
-    {
-        // deleteUser = member;
-        // showDeleteUserDialog = true;
     }
 
     private void OnAddMemberModalClose(bool isCancel)
@@ -137,7 +113,7 @@
                 }
 
                 addMemberErrorMessage = "";
-                members = MemberServices.Create(session.CurrentUser.ID , memberName, memberNumber);
+                members = MemberService.Create(session.CurrentUser.ID , memberName, memberNumber);
 
                 successMessage = "Membership created successfully.";
                 memberName = "";
@@ -147,20 +123,6 @@
             {
                 addMemberErrorMessage = e.Message;
             }
-        }
-    }
-
-    private void SearchMemberNumber(ChangeEventArgs e)
-    {
-        var searchTerm = e.Value.ToString();
-        if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
-        {
-            members = MemberServices.GetAll().Where(t =>
-            t.MemberNumber.Contains(searchTerm)).ToList();
-        }
-        else
-        {
-            members = MemberServices.GetAll();
         }
     }
 }

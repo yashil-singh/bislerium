@@ -2,8 +2,140 @@
 
 <div class="container p-4">
     <h1>Sales</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    <div class="d-flex align-items-center">
+                        Ordered By
+                        <a class='btn text-@(sortBy == "orderedBy" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                           @onclick='()=>SortByHandler("orderedBy")'>
+                            <span class='bi bi-sort-@(sortBy == "orderedBy" ? sortDirection : "up")' style="font-size: 1.25rem;" />
+                        </a>
+                    </div>
+                </th>
+                <th>
+                    <div class="d-flex align-items-center">
+                        Items
+                    </div>
+                </th>
+                <th>
+                    <div class="d-flex align-items-center">
+                        Discount
+                        <a class='btn text-@(sortBy == "discount" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                           @onclick='()=>SortByHandler("discount")'>
+                            <span class='bi bi-sort-@(sortBy == "discount" ? sortDirection : "up")' style="font-size: 1.25rem;" />
+                        </a>
+                    </div>
+                </th>
+                <th>
+                    <div class="d-flex align-items-center">
+                        Total
+                        <a class='btn text-@(sortBy == "total" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                           @onclick='()=>SortByHandler("total")'>
+                            <span class='bi bi-sort-@(sortBy == "total" ? sortDirection : "up")' style="font-size: 1.25rem;" />
+                        </a>
+                    </div>
+                </th>
+                <th>
+                    <div class="d-flex align-items-center">
+                        Ordered At
+                        <a class='btn text-@(sortBy == "orderedAt" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                           @onclick='()=>SortByHandler("orderedAt")'>
+                            <span class='bi bi-sort-@(sortBy == "orderedAt" ? sortDirection : "up")' style="font-size: 1.25rem;" />
+                        </a>
+                    </div>
+                </th>
+                <th>
+                    <div class="d-flex align-items-center">
+                        Handled By
+                        <a class='btn text-@(sortBy == "handledBy" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                           @onclick='()=>SortByHandler("handledBy")'>
+                            <span class='bi bi-sort-@(sortBy == "handledBy" ? sortDirection : "up")' style="font-size: 1.25rem;" />
+                        </a>
+                    </div>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                IEnumerable<Orders> orderList = ordersList;
+                if (sortBy == "orderedBy")
+                {
+                    orderList = sortDirection == "up" ? orderList.OrderBy(t => t.MemberNumber) : orderList.OrderByDescending(t =>
+                    t.OrderID);
+                }
+                else if (sortBy == "discount")
+                {
+                    orderList = sortDirection == "up" ? orderList.OrderBy(t => t.Discount) : orderList.OrderByDescending(t =>
+                    t.Discount);
+                }
+                else if (sortBy == "total")
+                {
+                    orderList = sortDirection == "up" ? orderList.OrderBy(t => t.OrderTotal) : orderList.OrderByDescending(t =>
+                    t.OrderTotal);
+                }
+                else if (sortBy == "orderedAt")
+                {
+                    orderList = sortDirection == "up" ? orderList.OrderBy(t => t.OrderDate) : orderList.OrderByDescending(t =>
+                    t.OrderDate);
+                }
+                else if (sortBy == "handledBy")
+                {
+                    orderList = sortDirection == "up" ? orderList.OrderBy(t => t.HandledBy) : orderList.OrderByDescending(t =>
+                    t.HandledBy);
+                }
+
+                foreach (var orderItem in orderList)
+                {
+                    var handler = UserService.GetById(orderItem.HandledBy).Username;
+                    <tr>
+                        <td>@orderItem.MemberNumber</td>
+                        <td>
+                                @foreach (var menuItem in orderItem.Items)
+                                {
+                                    var menuItemDetails = MenuItemService.GetItemByID(menuItem.ItemID);
+                                    if (menuItem != null)
+                                    {
+                                        <p>@menuItemDetails.Name x @menuItem.Quantity</p>
+                                    }
+                                }
+                        </td>
+                        <td>@orderItem.Discount%</td>
+                        <td>Rs. @orderItem.OrderTotal</td>
+                        <td>
+                            <p class="small mb-0">
+                                @orderItem.OrderDate.ToString("MMM dd, yyyy h:mm tt")
+                            </p>
+                        </td>
+                        
+                        <td>@handler</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
 </div>
 
 @code {
 
+    private string sortBy = "orderedAt";
+    private string sortDirection = "down";
+
+    private List<Orders> ordersList = OrderService.GetAllOrders();
+
+
+    // Handle sorting related queries
+    private void SortByHandler(string sortByName)
+    {
+        if (sortBy == sortByName)
+        {
+            sortDirection = sortDirection == "up" ? "down" : "up";
+        }
+        else
+        {
+            sortBy = sortByName;
+            sortDirection = "up";
+        }
+    }
 }

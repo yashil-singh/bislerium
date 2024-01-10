@@ -19,7 +19,7 @@
 
     protected override void OnInitialized()
     {
-        UserServices.SeedUsers();
+        UserService.SeedUsers();
 
         if (currentSession?.CurrentUser == null)
         {

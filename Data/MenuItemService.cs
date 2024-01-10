@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace bislerium.Data
 {
-    public static class MenuItemServices
+    public static class MenuItemService
     {
         // Save all menu items
         public static void SaveAll(List<MenuItems> menuItems)
@@ -88,6 +88,12 @@ namespace bislerium.Data
             menuItems.Remove(menuItem);
             SaveAll(menuItems);
             return menuItems;
+        }
+
+        public static MenuItems GetItemByID(Guid itemID)
+        {
+            List<MenuItems> menuItems = GetAll();
+            return menuItems.FirstOrDefault(x => x.ID == itemID);
         }
     }
 }

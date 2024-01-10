@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace bislerium.Data
 {
-    public  class UserServices
+    public  class UserService
     {
         public const string SeedUsername = "admin";
         public const string SeedPassword = "admin";

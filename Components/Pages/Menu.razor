@@ -235,7 +235,7 @@
     protected override void OnInitialized()
     {
         // Get all the menu items
-        menuItems = MenuItemServices.GetAll();
+        menuItems = MenuItemService.GetAll();
         if (session.CurrentUser == null)
         {
             NavManager.NavigateTo("/login");
@@ -266,12 +266,12 @@
         var searchTerm = e.Value.ToString();
         if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
         {
-            menuItems = MenuItemServices.GetAll().Where(t =>
+            menuItems = MenuItemService.GetAll().Where(t =>
             t.Name.ToLower().Contains(searchTerm.ToLower())).ToList();
         }
         else
         {
-            menuItems = MenuItemServices.GetAll();
+            menuItems = MenuItemService.GetAll();
         }
     }
 
@@ -379,11 +379,11 @@
                 }
                 if (currentMenuItem.ID == Guid.Empty)
                 {
-                    menuItems = MenuItemServices.Create(session.CurrentUser.ID, currentMenuItem.Name, currentMenuItem.Price.Value, currentMenuItem.Description, currentMenuItem.ImageURL, currentMenuItem.ItemType);
+                    menuItems = MenuItemService.Create(session.CurrentUser.ID, currentMenuItem.Name, currentMenuItem.Price.Value, currentMenuItem.Description, currentMenuItem.ImageURL, currentMenuItem.ItemType);
                 }
                 else
                 {
-                    menuItems = MenuItemServices.Update(currentMenuItem.ID, currentMenuItem.Name, currentMenuItem.Price.Value,
+                    menuItems = MenuItemService.Update(currentMenuItem.ID, currentMenuItem.Name, currentMenuItem.Price.Value,
                     currentMenuItem.Description, currentMenuItem.ImageURL);
                 }
 
@@ -418,7 +418,7 @@
             try
             {
                 deleteErrorMessage = "";
-                menuItems = MenuItemServices.Delete(currentMenuItem.ID);
+                menuItems = MenuItemService.Delete(currentMenuItem.ID);
                 showDeleteModal = false;
                 currentMenuItem = null;
             }
@@ -438,12 +438,12 @@
         var searchTerm = e.Value.ToString();
         if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
         {
-            menuItems = MenuItemServices.GetAll().Where(t =>
+            menuItems = MenuItemService.GetAll().Where(t =>
             t.Name.ToLower().Contains(searchTerm.ToLower())).ToList();
         }
         else
         {
-            menuItems = MenuItemServices.GetAll();
+            menuItems = MenuItemService.GetAll();
         }
     }
 }

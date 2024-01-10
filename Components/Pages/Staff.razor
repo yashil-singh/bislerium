@@ -30,7 +30,7 @@
                     <td>@user.CreatedAt.ToString("MMM dd, yyyy h:mm tt")</td>
                     <td>
                         @{
-                            var creator = UserServices.GetById(user.CreatedBy);
+                            var creator = UserService.GetById(user.CreatedBy);
                             <span>@(creator == null ? "N/A" : creator.Username)</span>
                         }
                     </td>
@@ -114,7 +114,7 @@
 
     protected override void OnInitialized()
     {
-        users = UserServices.GetAll(); 
+        users = UserService.GetAll(); 
         if (session?.CurrentUser == null || session.CurrentUser.Role != Roles.Admin)
         {
             NavManager.NavigateTo("/");
@@ -148,7 +148,7 @@
                 }
 
                 addUserErrorMessage = "";
-                users = UserServices.Create(session.CurrentUser.ID, username, password, role);
+                users = UserService.Create(session.CurrentUser.ID, username, password, role);
                 showAddUserDialog = false;
             }
             catch (Exception e)
@@ -178,7 +178,7 @@
             try
             {
                 deleteUserErrorMessage = "";
-                users = UserServices.DeleteByUserId(deleteUser.ID);
+                users = UserService.DeleteByUserId(deleteUser.ID);
                 showDeleteUserDialog = false;
                 deleteUser = null;
             }
@@ -201,7 +201,7 @@
 
             errorMessage = "";
             successMessage = "";
-            UserServices.Create(session.CurrentUser.ID, username, password, role);
+            UserService.Create(session.CurrentUser.ID, username, password, role);
             successMessage = "Staff added.";
             username = null;
             password = null;

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace bislerium.Data
 {
-    public class MemberServices
+    public class MemberService
     {
         public static List<Members> GetAll()
         {
@@ -80,6 +80,35 @@ namespace bislerium.Data
         {
             List<Members> members = GetAll();
             return members.FirstOrDefault(x => x.MemberNumber == memberNumber);
+        }
+
+        public static MemberType CheckMemberType(string memberNumber)
+        {
+            Members member = GetByNumber(memberNumber);
+            if(member.MemberType == MemberType.Regular)
+            {
+                return MemberType.Regular;
+            }
+            
+            return MemberType.General;
+        }
+
+        public static void ConvertMemberType(string memberNumber)
+        {
+            List<Members> members = GetAll();
+            var memberToConvert = members.FirstOrDefault(x => x.MemberNumber == memberNumber);
+            memberToConvert.MemberType = MemberType.Regular;
+            int index = members.FindIndex(x => x.MemberNumber == memberNumber);
+
+            if(index != -1)
+            {
+                members[index] = memberToConvert;
+                SaveAll(members);
+            }
+            else
+            {
+                throw new Exception("Member not found.");
+            }
         }
     }
 }
