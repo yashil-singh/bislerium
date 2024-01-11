@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 
 namespace bislerium.Data
 {
@@ -12,6 +8,6 @@ namespace bislerium.Data
         public string MemberName { get; set; }
         public MemberType MemberType { get; set; } = MemberType.General;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public Guid CreatedBy { get; set;}
+        public Guid CreatedBy { get; set; }
     }
 }

@@ -1,5 +1,4 @@
-﻿@using System.Diagnostics
-@page "/add-staff"
+﻿@page "/add-staff"
 @inject NavigationManager NavManager
 
 
@@ -134,6 +133,7 @@
         if (isCancel)
         {
             showAddUserDialog = false;
+            errorMessage = "";
         }
         else
         {

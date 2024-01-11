@@ -1,6 +1,5 @@
 ﻿@page "/menu"
 @inject NavigationManager NavManager
-@using System.Diagnostics
 
 <div class="container p-4">
     <h1>Menu</h1>
@@ -169,7 +168,7 @@
 
 @if (showDeleteModal)
 {
-    <Modal Title="Delete Todo" OnClose="@OnDeleteModalClose" OkLabel="Confirm" CancelLabel="Cancel">
+    <Modal Title="Delete Item" OnClose="@OnDeleteModalClose" OkLabel="Confirm" CancelLabel="Cancel">
         <p>Are you sure you want to delete <strong>@currentMenuItem.Name</strong>?</p>
         @if (!string.IsNullOrEmpty(deleteErrorMessage))
         {
@@ -347,6 +346,8 @@
         {
             showEditModal = false;
             currentMenuItem = null;
+            editErrorMessage = "";
+
         }
         else
         {

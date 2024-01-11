@@ -1,6 +1,5 @@
 ﻿@page "/"
 @inject NavigationManager NavManager
-@using System.Diagnostics
 
 <div class="container p-4 position-relative">
     <div class="row row-cols-2">
@@ -484,6 +483,7 @@
     {
         showAddMemberModal = true;
         addMemberErrorMessage = "";
+        discount = 0;
     }
 
     private void OnAddMemberModalClose(bool isCancel)
@@ -607,6 +607,7 @@
         memberNumber = "";
         discountAvailable = false;
         redeemAvailable = false;
+        redeemSuccessMessage = "";
     }
 
     private void HandleRedeem()

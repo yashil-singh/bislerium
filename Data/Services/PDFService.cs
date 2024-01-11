@@ -1,8 +1,6 @@
 ﻿
-using Microsoft.Maui.Controls;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
-using System.Text.Json;
 using static bislerium.Components.Pages.Reports;
 
 namespace bislerium.Data
@@ -18,7 +16,7 @@ namespace bislerium.Data
                 {
                     page.Margin(2, Unit.Centimetre);
                     page.DefaultTextStyle(x => x.FontSize(13));
-                    page.Header().Text("Bislerium Cafe - Orders Till Date").Bold().FontSize(25);
+                    page.Header().Text("Bislerium Cafe").Bold().FontSize(25);
 
                     page.Content().Column(column =>
                     {

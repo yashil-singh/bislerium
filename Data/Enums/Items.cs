@@ -1,5 +1,4 @@
-﻿
-namespace bislerium.Data
+﻿namespace bislerium.Data
 {
     public enum Items
     {
